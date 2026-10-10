@@ -1,108 +1,120 @@
-# Alphabetic - Intelligent Data Agent
+# Alphabetic — AI-Powered Database Query Assistant
 
-A smart, AI-powered tool that automatically connects to your database, analyzes its structure, and generates easy-to-understand documentation and insights. Ask questions about your data in plain English and get instant answers.
+An intelligent, local-LLM-powered database agent designed to automate schema documentation and democratize data access. Alphabetic securely connects to any relational database, generates business-friendly data dictionaries, and provides a natural language chat interface to query your data in plain English—all without exposing sensitive schemas to external cloud APIs.
 
-![Application Architecture](docs/flowDiagram.png)
+![Application Architecture](https://raw.githubusercontent.com/Awesome06/Alphabetic/main/docs/flowDiagram.png)
+*(Alphabetic Architecture and Agent Flow)*
 
-## ✨ Features
+## Contents
+- [Quick start](#quick-start)
+- [Tech stack](#tech-stack)
+- [System Architecture](#system-architecture)
+- [Core Features & Agentic Flow](#core-features--agentic-flow)
+- [Project layout](#project-layout)
 
-- **Connect to Anything**: Works with any database supported by SQLAlchemy (PostgreSQL, MySQL, SQLite, SQL Server, etc.).
-- **Automatic Discovery**: Scans and lists all schemas, tables, and views in your database.
-- **AI-Powered Analysis**: For any table or view, the agent generates:
-    - **Key Metrics**: Total rows, column count, data completeness, and duplicate row count.
-    - **Business Summary**: A business-friendly summary explaining what the data represents and its potential use cases.
-    - **Schema Explanation**: A plain-English breakdown of the table's columns and data types.
-- **Interactive Chat Agent**: Ask natural language questions about your database (e.g., "What tables have customer information?" or "Explain the schema for the products table").
-- **Dual Chat Modes**: Choose between a 'Summary' mode for high-level answers based on metadata and a powerful 'SQL' mode that generates and executes queries for precise, data-driven answers.
-- **SQL Self-Correction**: The SQL chat agent can analyze its own query errors, correct them, and retry, significantly improving success rates for complex questions.
-- **Smart Caching**: Analysis results are cached to provide instant responses on subsequent views.
+## Quick start
+Alphabetic runs locally to ensure absolute data privacy. It requires **Python 3.11+**, **Node 20+**, and **Ollama** for local model inference.
 
-## 🛠️ Tech Stack
-
-- **Backend**: Python, FastAPI, SQLAlchemy, Pandas
-- **Frontend**: React, Vite, Axios
-- **AI**: Llama 3 and Code Llama running locally via [Ollama](https://ollama.com/)
-
-## 📋 Prerequisites
-
-- [Python 3.8+](https://www.python.org/downloads/)
-- [Node.js and npm](https://nodejs.org/en)
-- [Ollama](https://ollama.com/) installed and running on your machine.
-
-## 🚀 Getting Started
-
-Follow these steps to get the project up and running on your local machine.
-
-### 1. Clone the Repository
-
+### 1. Initialize Local LLMs
+Ensure [Ollama](https://ollama.com/) is installed and running, then pull the required models:
 ```bash
-git clone https://github.com/your-username/Intelligent_Data_Dictionary_Agent.git
-cd Intelligent_Data_Dictionary_Agent
-```
-
-### 2. Set up the AI Model
-
-You need to have the Llama 3 and Code Llama models available through Ollama.
-
-```bash
-# Download the required AI models
 ollama pull llama3
 ollama pull codellama
-
-# Keep this terminal open or run it as a background service
-ollama serve
 ```
 
-### 3. Set up the Backend
-
-The backend is a Python FastAPI server.
-
+### 2. Launch the Backend (FastAPI)
 ```bash
-# Navigate to the backend directory
-cd backend
-# Create and activate a virtual environment (recommended)
-python -m venv .venv
-# On Windows: .\.venv\Scripts\activate
-# On macOS/Linux: source .venv/bin/activate
+git clone [https://github.com/Awesome06/Alphabetic.git](https://github.com/Awesome06/Alphabetic.git)
+cd Alphabetic/backend
 
-# Install the required Python packages
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .\.venv\Scripts\activate
 pip install -r requirements.txt
 
-# You will also need a database driver for SQLAlchemy to connect to your database.
-# Install the one you need, for example:
-# pip install psycopg2-binary  # For PostgreSQL
-# pip install pyodbc           # For SQL Server on Windows
-# pip install pymssql          # For SQL Server on Linux/macOS
-
-# Run the backend server
+# Run the API server
 python main.py
 ```
-The backend will be running at `http://localhost:8000`.
 
-### 4. Set up the Frontend
-
-The frontend is a React application
-
+### 3. Launch the Frontend (React)
+Open a new terminal window:
 ```bash
-# Navigate to the frontend directory from the root
-cd frontend
-
-# Install dependencies
+cd Alphabetic/frontend
 npm install
-
-# Run the development server
 npm run dev
 ```
+Access the application at `http://localhost:5173`.
 
-### 5. Access the Application
+## Tech stack
 
-Open your web browser and navigate to **`http://localhost:5173`** (or the address shown in your terminal after running `npm run dev`).
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React, Vite, Axios | Responsive SPA for database introspection and chat. |
+| **Backend API**| Python, FastAPI | High-performance async API for routing LLM prompts and DB queries. |
+| **Database ORM**| SQLAlchemy, Pandas | Agnostic connection layer (PostgreSQL, MySQL, SQL Server, SQLite). |
+| **AI / LLMs** | Ollama (Llama 3, Code Llama) | Secure, localized inference for natural language and SQL generation. |
 
-## 📖 How to Use
+## System Architecture
 
-1.  **Connect**: On the landing page, enter the full SQLAlchemy connection string for your database and click "Connect & Scan".
-2.  **Explore**: The dashboard will appear, showing all the schemas found in your database. Select a schema from the left sidebar to view its tables and views.
-3.  **Analyze**: Click on any table or view card. The application will perform a detailed analysis and display the metrics, AI summary, and schema explanation.
-4.  **Chat**: Click the "Chat" button on the dashboard. You can now ask questions about your database. The agent uses one of two modes to answer:
-    -   **Summary Mode**: This mode is best for general questions about your database structure or high-level concepts. It uses AI-generated summaries of your tables to provide answers without running new queries. It's fast and good for exploration.
-    -   **SQL Mode**: This mode is for specific, quantitative questions (e.g., "How many orders were placed last month?"). It generates a SQL query, executes it against your database, and then provides a natural language summary of the results. If the query fails, it will attempt to fix itself and retry.
+```text
+┌──────────────────────────── Browser ────────────────────────────┐
+│                        React SPA UI                             │
+│                                                                 │
+│   ├── Schema Explorer Dashboard                                 │
+│   └── Dual-Mode Chat Interface                                  │
+└───────────────┬───────────────────────────────▲─────────────────┘
+                │ HTTP / REST                   │ JSON Responses
+┌───────────────▼───────────────────────────────┴─────────────────┐
+│                        FastAPI Backend                          │
+│                                                                 │
+│   ├── Schema Introspection Engine (SQLAlchemy)                  │
+│   └── Prompt Router (Summary Mode vs. SQL Mode)                 │
+└───────────────┬───────────────────────────────┬─────────────────┘
+                │ Generates SQL / Text          │ Executes SQL
+┌───────────────▼────────────────┐      ┌───────▼─────────────────┐
+│    Local Ollama Instance       │      │   Target Database       │
+│  (Llama 3 / Code Llama)        │      │ (PostgreSQL, MySQL...)  │
+└────────────────────────────────┘      └─────────────────────────┘
+```
+
+## Core Features & Agentic Flow
+
+Alphabetic goes beyond simple text generation by employing an **Agentic Workflow** with distinct operational modes and self-healing execution loops.
+
+### 1. Automated Schema Introspection
+Upon connection, Alphabetic bypasses manual configuration by scanning the target database via SQLAlchemy. It extracts structural metadata, calculates completeness metrics via Pandas, and utilizes **Llama 3** to generate business-friendly summaries for every table and view.
+
+### 2. Dual-Mode Chat Interface
+The chat agent routes user queries to the most efficient execution path:
+*   **Summary Mode:** Designed for high-level metadata questions (e.g., *"Which tables contain user payment info?"*). It relies entirely on the AI's contextual awareness of the cached schema summaries, returning instant answers without touching the live database.
+*   **SQL Mode:** Designed for precise, quantitative data retrieval (e.g., *"What was the total revenue in Q3?"*). It utilizes **Code Llama** to translate the natural language query into optimized SQL, executes it against the database, and translates the raw result set back into plain English.
+
+### 3. Self-Correcting SQL Engine
+To handle the inherent unpredictability of LLM-generated code, the SQL Mode features a self-healing execution loop. If Code Llama generates invalid SQL (e.g., hallucinated columns or syntax errors), the backend catches the database exception, feeds the exact error message back into the LLM context window, and commands it to fix the query. This drastically increases the success rate of complex analytical questions.
+
+## Project layout
+
+```text
+.
+├── backend/
+│   ├── main.py                 # FastAPI application and route definitions
+│   ├── database.py             # SQLAlchemy connection manager
+│   ├── llm_agent.py            # Prompt engineering and Ollama integration
+│   ├── sql_executor.py         # Query execution and self-correction loop
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/         # Chat interface, Schema Explorer, Metrics Cards
+│   │   ├── api/                # Axios configuration and backend communication
+│   │   └── App.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── docs/                       # Architecture diagrams and screenshots
+└── README.md
+```
+
+---
+
+## Contact
+**Mrigank Bhatnagar**  
+* [LinkedIn](https://linkedin.com/in/mrigank-bhatnagar)
+* [GitHub](https://github.com/Awesome06)
